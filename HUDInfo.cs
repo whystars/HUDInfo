@@ -47,6 +47,9 @@ public class HUDInfo : Plugin<HUDInfoConfig>
 {
     public static HUDInfo Instance { get; set; } = null!;
 
+    // 按连接（Player 实例）为单位持有 HUD 状态，玩家断线时清理（见 OnPlayerLeft）。
+    // 这与 DDSurrender 的“每回合”状态缓存不同：HUD 是每个连接的 UI 对象，跨回合应保留，
+    // 不需要在回合结束时清空，切勿照搬“回合结束清缓存”的模式误加清理逻辑。
     private readonly Dictionary<Player, PlayerHud> _huds = new();
 
     private HUDInfoConfig infoconfig;  //插件配置
@@ -108,12 +111,8 @@ public class HUDInfo : Plugin<HUDInfoConfig>
     {
         Instance = this;
 
-        PlayerEvents.Joined += OnPlayerJoin;
-        PlayerEvents.ChangedRole += OnRoleChanged;
-        PlayerEvents.InteractingElevator += OnInteractingElevator;
-        ServerEvents.RoundStarted += OnRoundStart;
-        Scp914Events.Activating += On914Activating;
-
+        // 配置/翻译校验必须在订阅任何事件之前完成：一旦订阅了事件，加载失败后就会有
+        // 玩家加入等事件触发到用空数据初始化的 PlayerHud，导致空引用异常。
         if (_hasIncorrectSettings || infoconfig == null)
         {
             Logger.Error($"{Name} 配置文件加载失败，请检查 config.yml 格式或删除后重启！");
@@ -125,6 +124,13 @@ public class HUDInfo : Plugin<HUDInfoConfig>
             Logger.Error($"{Name} 翻译文件加载失败，请检查 translations.yml 格式或删除后重启！");
             return;
         }
+
+        PlayerEvents.Joined += OnPlayerJoin;
+        PlayerEvents.Left += OnPlayerLeft;
+        PlayerEvents.ChangedRole += OnRoleChanged;
+        PlayerEvents.InteractingElevator += OnInteractingElevator;
+        ServerEvents.RoundStarted += OnRoundStart;
+        Scp914Events.Activating += On914Activating;
 
         Logger.Info($"{Name} 插件加载成功! v{Version} by {Author} - {Description}");
 
@@ -186,13 +192,17 @@ public class HUDInfo : Plugin<HUDInfoConfig>
         Instance = null!;
 
         PlayerEvents.Joined -= OnPlayerJoin;
+        PlayerEvents.Left -= OnPlayerLeft;
         PlayerEvents.ChangedRole -= OnRoleChanged;
         PlayerEvents.InteractingElevator -= OnInteractingElevator;
         ServerEvents.RoundStarted -= OnRoundStart;
         Scp914Events.Activating -= On914Activating;
 
-        foreach (var hud in _huds.Values) hud.Dispose();
-            _huds.Clear();
+        foreach (var hud in _huds.Values)
+        {
+            hud.Dispose();
+        }
+        _huds.Clear();
     }
 
     //电梯显示已完成
@@ -206,18 +216,32 @@ public class HUDInfo : Plugin<HUDInfoConfig>
         var p_operator = ev.Player.Nickname ?? "未知";
         var text = hintsTranslations.templates.elevator.Replace("{p_operator}",p_operator);
         foreach (var p in near)
-            _huds[p].ShowElevator(text);
+        {
+            if (_huds.TryGetValue(p, out var hud))
+                hud.ShowElevator(text);
+        }
     }
 
     private void OnPlayerJoin(PlayerJoinedEventArgs ev)
     {
-        _huds[ev.Player] = new PlayerHud(ev.Player);
-        _huds[ev.Player].Init(hintsBase, hintsTranslations);
+        var hud = new PlayerHud(ev.Player);
+        hud.Init(hintsBase, hintsTranslations);
+        _huds[ev.Player] = hud;
+    }
+
+    private void OnPlayerLeft(PlayerLeftEventArgs ev)
+    {
+        if (_huds.TryGetValue(ev.Player, out var hud))
+        {
+            hud.Dispose();
+            _huds.Remove(ev.Player);
+        }
     }
 
     private void OnRoleChanged(PlayerChangedRoleEventArgs ev)
     {
-        _huds[ev.Player].OnRoleChanged(ev.NewRole.RoleTypeId, hintsBase.i_info_timer);
+        if (_huds.TryGetValue(ev.Player, out var hud))
+            hud.OnRoleChanged(ev.NewRole.RoleTypeId, hintsBase.i_info_timer);
     }
 
     private void OnRoundStart()
@@ -240,9 +264,10 @@ public class HUDInfo : Plugin<HUDInfoConfig>
 
         foreach (var p in Player.List)
         {
-            if(p.IsAlive && p != null && p.Room.Name == RoomName.Lcz914)
+            if (p != null && p.IsAlive && p.Room.Name == RoomName.Lcz914)
             {
-                _huds[p].Show914(msg);
+                if (_huds.TryGetValue(p, out var hud))
+                    hud.Show914(msg);
             }
         }
     }
@@ -268,12 +293,16 @@ public class PlayerHud : IDisposable
 
     private Dictionary<int, int> lastTime = new();
 
-    HUDInfo.HintsBase BaseA; 
+    private PlayerDisplay _display;
+    private CoroutineHandle _factionCoroutine;
+    private CoroutineHandle _respawnCoroutine;
+
+    HUDInfo.HintsBase BaseA;
     HUDInfo.HintsTranslations BaseTrans;
     public PlayerHud(Player pl)
     {
         _pl = pl;
-        
+
         //剩余交给Init处理
     }
 
@@ -357,12 +386,12 @@ public class PlayerHud : IDisposable
             { 3, INT_MAX }
         };
 
-        var display = PlayerDisplay.Get(_pl);
+        _display = PlayerDisplay.Get(_pl);
         _hints.AddRange(new[] { _h914, _hFaction, _hNtfResp, _hNtfMini, _hCiResp, _hCiMini, _hElevator });
-        _hints.ForEach(display.AddHint);
+        _hints.ForEach(_display.AddHint);
 
-        Timing.RunCoroutine(UpdateFaction(BaseA.i_info_faction));
-        Timing.RunCoroutine(UpdateRespawn(BaseA.i_info_timer));
+        _factionCoroutine = Timing.RunCoroutine(UpdateFaction(BaseA.i_info_faction));
+        _respawnCoroutine = Timing.RunCoroutine(UpdateRespawn(BaseA.i_info_timer));
     }
 
     public void Show914(string text)
@@ -536,6 +565,13 @@ public class PlayerHud : IDisposable
 
     public void Dispose()
     {
-        foreach (var h in _hints) h.Hide = true;
+        // 杀掉两个轮询协程，否则玩家断线后它们会以 while(true) 无限运行下去。
+        Timing.KillCoroutines(_factionCoroutine, _respawnCoroutine);
+
+        // 把 Hint 从 PlayerDisplay 上摘除，而不只是隐藏，避免残留的引用一直占用内存。
+        if (_display != null)
+            _display.RemoveHint(_hints);
+
+        _hints.Clear();
     }
 }
