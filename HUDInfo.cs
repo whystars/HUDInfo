@@ -47,7 +47,7 @@ public class HUDInfo : Plugin<HUDInfoConfig>
     private HUDTranslation hudtranslations; //翻译信息
 
     private bool _hasIncorrectSettings = false;
-    private bool _hasIncorrectTraslation = false;
+    private bool _hasIncorrectTranslation = false;
 
     public struct Templates
     {
@@ -93,7 +93,7 @@ public class HUDInfo : Plugin<HUDInfoConfig>
     public override void LoadConfigs()  //读取配置文件
     {
         _hasIncorrectSettings = !this.TryLoadConfig("config.yml", out infoconfig);
-        _hasIncorrectTraslation = !this.TryLoadConfig("translations.yml", out hudtranslations);
+        _hasIncorrectTranslation = !this.TryLoadConfig("translations.yml", out hudtranslations);
 
         base.LoadConfigs();
     }
@@ -110,7 +110,7 @@ public class HUDInfo : Plugin<HUDInfoConfig>
             return;
         }
 
-        if (_hasIncorrectTraslation || hudtranslations == null)
+        if (_hasIncorrectTranslation || hudtranslations == null)
         {
             Logger.Error($"{Name} 翻译文件加载失败，请检查 translations.yml 格式或删除后重启！");
             return;
@@ -280,7 +280,11 @@ public class PlayerHud : IDisposable
     private Hint _hCiMini;
     private Hint _hElevator;
 
-    private Dictionary<int, int> lastTime = new();
+    // 上一次轮询读到的各刷新波剩余秒数，用于判断计时器是否处于暂停状态（数值没变即视为暂停）。
+    private int _lastNtf = int.MaxValue;
+    private int _lastNtfMini = int.MaxValue;
+    private int _lastCi = int.MaxValue;
+    private int _lastCiMini = int.MaxValue;
 
     private PlayerDisplay _display;
     private CoroutineHandle _factionCoroutine;
@@ -366,14 +370,6 @@ public class PlayerHud : IDisposable
         _teamNames = BaseTrans.teamNames;
 
         _teamColors = BaseTrans.teamColors;
-
-        lastTime = new Dictionary<int, int>()
-        {
-            { 0, int.MaxValue },
-            { 1, int.MaxValue },
-            { 2, int.MaxValue },
-            { 3, int.MaxValue }
-        };
 
         _display = PlayerDisplay.Get(_pl);
         _hints.AddRange(new[] { _h914, _hFaction, _hNtfResp, _hNtfMini, _hCiResp, _hCiMini, _hElevator });
@@ -514,23 +510,23 @@ public class PlayerHud : IDisposable
 
                 var paused = "<color=red>已暂停</color>";
 
-                var ntfTime = (_ntf > 0 && lastTime[0] != _ntf)
+                var ntfTime = (_ntf > 0 && _lastNtf != _ntf)
                     ? $"{_ntf}秒"
                     : paused;
-                var ntfMini = (_ntfmini > 0 && lastTime[1] != _ntfmini)
+                var ntfMini = (_ntfmini > 0 && _lastNtfMini != _ntfmini)
                     ? $"{_ntfmini}秒"
                     : paused;
-                var ciTime = (_ci > 0 && lastTime[2] != _ci)
+                var ciTime = (_ci > 0 && _lastCi != _ci)
                     ? $"{_ci}秒"
                     : paused;
-                var ciMini = (_cimini > 0 && lastTime[3] != _cimini)
+                var ciMini = (_cimini > 0 && _lastCiMini != _cimini)
                     ? $"{_cimini}秒"
                     : paused;
 
-                lastTime[0] = _ntf;
-                lastTime[1] = _ntfmini;
-                lastTime[2] = _ci;
-                lastTime[3] = _cimini;
+                _lastNtf = _ntf;
+                _lastNtfMini = _ntfmini;
+                _lastCi = _ci;
+                _lastCiMini = _cimini;
 
                 //2次确认显示
                 _hNtfMini.Hide = _hNtfResp.Hide = _hCiResp.Hide = _hCiMini.Hide = false; //显示
