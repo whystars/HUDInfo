@@ -66,6 +66,7 @@ public class HUDInfo : Plugin<HUDInfoConfig>
     {
         public float x, y;
         public int font;
+        public float duration; // Hint 显示持续时间（秒），仅 914 和电梯使用
     }
 
     public struct HintsBase
@@ -73,6 +74,7 @@ public class HUDInfo : Plugin<HUDInfoConfig>
         public HintsConfigs i_914, i_faction, i_elevator, i_ntf, i_ntfmini, i_ci, i_cimini;
         public bool i_info_timer, i_info_faction, i_info_914, i_info_elevator;
         public float _elev_range;
+        public float update_interval; // 阵营人数/重生倒计时轮询间隔（秒）
     }
 
     private HintsBase hintsBase; //数据文件
@@ -134,10 +136,12 @@ public class HUDInfo : Plugin<HUDInfoConfig>
         hintsBase.i_914.x = infoconfig._914_x;
         hintsBase.i_914.y = infoconfig._914_y;
         hintsBase.i_914.font = infoconfig._914_font;
+        hintsBase.i_914.duration = infoconfig._914_duration;
 
         hintsBase.i_elevator.x = infoconfig._elev_x;
         hintsBase.i_elevator.y = infoconfig._elev_y;
         hintsBase.i_elevator.font = infoconfig._elev_font;
+        hintsBase.i_elevator.duration = infoconfig._elev_duration;
 
         hintsBase.i_ntf.x = infoconfig._ntfResp_x;
         hintsBase.i_ntf.y = infoconfig._ntfResp_y;
@@ -160,6 +164,7 @@ public class HUDInfo : Plugin<HUDInfoConfig>
         hintsBase.i_faction.font = infoconfig._faction_font;
 
         hintsBase._elev_range = infoconfig.elev_range;
+        hintsBase.update_interval = infoconfig.info_update_interval;
 
 
         //加载翻译到本地
@@ -204,7 +209,7 @@ public class HUDInfo : Plugin<HUDInfoConfig>
         var near = Player.List.Where(p =>
             Vector3.Distance(p.Position, ev.Player.Position) <= hintsBase._elev_range);
 
-        var p_operator = ev.Player.Nickname ?? "未知";
+        var p_operator = ev.Player.Nickname ?? hudtranslations.unknown_operator;
         var text = hintsTranslations.templates.elevator.Replace("{p_operator}",p_operator);
         foreach (var p in near)
         {
@@ -248,7 +253,7 @@ public class HUDInfo : Plugin<HUDInfoConfig>
         var knob = ev.KnobSetting;
         var mode = hintsTranslations.scp914knobtranslations[knob];
 
-        var p_operator = ev.Player.Nickname ?? "未知";
+        var p_operator = ev.Player.Nickname ?? hudtranslations.unknown_operator;
 
         var msg = hintsTranslations.templates.scp914.Replace("{mode}", mode)
                                .Replace("{p_operator}", p_operator);
@@ -383,14 +388,14 @@ public class PlayerHud : IDisposable
     {
         _h914.Text = text;
         _h914.Hide = false;
-        _h914.HideAfter(15f);
+        _h914.HideAfter(BaseA.i_914.duration);
     }
 
     public void ShowElevator(string text)
     {
         _hElevator.Text = text;
         _hElevator.Hide = false;
-        _hElevator.HideAfter(7f);
+        _hElevator.HideAfter(BaseA.i_elevator.duration);
     }
 
     public void OnRoleChanged(RoleTypeId newRole, bool is_toshow)
@@ -492,7 +497,7 @@ public class PlayerHud : IDisposable
             {
                 _hFaction.Hide = true; //隐藏
             }
-            yield return Timing.WaitForSeconds(1f);
+            yield return Timing.WaitForSeconds(BaseA.update_interval);
         }
     }
 
@@ -538,7 +543,7 @@ public class PlayerHud : IDisposable
             }else{
                 _hNtfResp.Hide = _hNtfMini.Hide = _hCiResp.Hide = _hCiMini.Hide = true; //隐藏
             }
-            yield return Timing.WaitForSeconds(1f);
+            yield return Timing.WaitForSeconds(BaseA.update_interval);
         }
     }
 

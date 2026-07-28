@@ -29,6 +29,8 @@ public class HUDInfoConfig
     public float _914_y { get; set; } = 80;
     [Description("914显示,字体大小:")]
     public int _914_font { get; set; } = 20;
+    [Description("914显示,提示持续时间(秒):")]
+    public float _914_duration { get; set; } = 15f;
 
     [Description("阵营剩余显示,X轴坐标(0为正中,-为左,+为右):")]
     public float _faction_x { get; set; } = 800;
@@ -71,7 +73,12 @@ public class HUDInfoConfig
     public float _elev_y { get; set; } = 800;
     [Description("电梯显示,字体大小:")]
     public int _elev_font { get; set; } = 20;
+    [Description("电梯显示,提示持续时间(秒):")]
+    public float _elev_duration { get; set; } = 7f;
 
     [Description("电梯提示显示可见范围（操作者为中心）:")]
     public float elev_range { get; set; } = 10f;
+
+    [Description("阵营人数/重生倒计时的刷新间隔(秒), 越小越实时但服务器开销略高:")]
+    public float info_update_interval { get; set; } = 1f;
 }

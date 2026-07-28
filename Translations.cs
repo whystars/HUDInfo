@@ -54,6 +54,9 @@ public class HUDTranslation
     [Description("SCP914显示模板(HEX color写死, {mode}表示操作模式, {p_operator}表示操作人, 没有的话自动为未知):")]
     public string scp914_template { get; set; } = "[Scp914] 已启动! 模式: <color=#F7C73E>{mode}</color>, 操作人: <color=#0080FF>{p_operator}</color>";
 
+    [Description("无法获取操作者名称时显示的兜底文案:")]
+    public string unknown_operator { get; set; } = "未知";
+
     [Description("SCP914, Rough模式翻译:")]
     public Dictionary<Scp914KnobSetting, string> scp914_trans { get; set; } = new Dictionary<Scp914KnobSetting, string>()
     {
