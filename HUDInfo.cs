@@ -1,6 +1,4 @@
 ﻿// HUDInfo.cs
-using Achievements.Handlers;
-using GameCore;
 using Hints;
 using HintServiceMeow;
 using HintServiceMeow.Core.Enum;
@@ -8,23 +6,19 @@ using HintServiceMeow.Core.Extension;
 using HintServiceMeow.Core.Models.Hints;
 using HintServiceMeow.Core.Utilities;
 using HintServiceMeow.UI;
-using Interactables.Interobjects;
-using InventorySystem.Items.Coin;
 using LabApi;
-using LabApi.Events.Arguments.Interfaces;
 using LabApi.Events.Arguments.PlayerEvents;
 using LabApi.Events.Arguments.Scp914Events;
 using LabApi.Events.Arguments.ServerEvents;
-using LabApi.Events.CustomHandlers;
 using LabApi.Events.Handlers;
 using LabApi.Features;
 using LabApi.Features.Console;
 using LabApi.Features.Wrappers;
-using LabApi.Loader;
+using LabApi.Loader;                    // TryLoadConfig 扩展方法
 using LabApi.Loader.Features.Configuration;
 using LabApi.Loader.Features.Plugins;
 using LabApi.Loader.Features.Plugins.Enums;
-using MapGeneration;
+using MapGeneration;                    // RoomName 枚举
 using MEC;
 using PlayerRoles;
 using Scp914;
@@ -32,10 +26,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using System.Threading;
-using System.Xml.Linq;
 using UnityEngine;
-using YamlDotNet.Core.Tokens;
 using Hint = HintServiceMeow.Core.Models.Hints.Hint;
 using Logger = LabApi.Features.Console.Logger;
 using Vector3 = UnityEngine.Vector3;
@@ -246,7 +237,7 @@ public class HUDInfo : Plugin<HUDInfoConfig>
 
     private void OnRoundStart()
     {
-        _huds.Values.ToList().ForEach(h => h.Start());
+        // 预留：回合开始时的 HUD 重置逻辑
     }
 
     //914显示已完成
@@ -288,8 +279,6 @@ public class PlayerHud : IDisposable
     private Hint _hCiResp;
     private Hint _hCiMini;
     private Hint _hElevator;
-
-    const int INT_MAX = 2147483647;
 
     private Dictionary<int, int> lastTime = new();
 
@@ -380,10 +369,10 @@ public class PlayerHud : IDisposable
 
         lastTime = new Dictionary<int, int>()
         {
-            { 0, INT_MAX },
-            { 1, INT_MAX },
-            { 2, INT_MAX },
-            { 3, INT_MAX }
+            { 0, int.MaxValue },
+            { 1, int.MaxValue },
+            { 2, int.MaxValue },
+            { 3, int.MaxValue }
         };
 
         _display = PlayerDisplay.Get(_pl);
@@ -418,8 +407,6 @@ public class PlayerHud : IDisposable
         var spectator = newRole == RoleTypeId.Spectator;
         _hNtfResp.Hide = _hNtfMini.Hide = _hCiResp.Hide = _hCiMini.Hide = !spectator;
     }
-
-    public void Start() { }
 
     private IEnumerator<float> UpdateFaction(bool is_toshow)
     {
@@ -552,10 +539,6 @@ public class PlayerHud : IDisposable
                 _hNtfMini.Text = BaseTrans.templates.ntfmini.Replace("{Time}", ntfMini);
                 _hCiResp.Text = BaseTrans.templates.ci.Replace("{Time}", ciTime);
                 _hCiMini.Text = BaseTrans.templates.cimini.Replace("{Time}", ciMini);
-                //_hNtfResp.Text = $"<color=#00BFFF>下一次刷新时间:</color> {ntfTime}";
-                //_hNtfMini.Text = $"<color=#00BFFF>迷你波:</color> {ntfMini}";
-                //_hCiResp.Text = $"<color=#008F1C>下一次刷新时间:</color> {ciTime}";
-                //_hCiMini.Text = $"<color=#008F1C>迷你波:</color> {ciMini}";
             }else{
                 _hNtfResp.Hide = _hNtfMini.Hide = _hCiResp.Hide = _hCiMini.Hide = true; //隐藏
             }
