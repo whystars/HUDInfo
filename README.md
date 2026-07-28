@@ -1,7 +1,7 @@
 # HUDInfo
 
 ![LabAPI](https://img.shields.io/badge/LabAPI-1.1.7+-blue)
-![Version](https://img.shields.io/badge/Version-2.0.0-green)
+![Version](https://img.shields.io/badge/Version-2.1.0-green)
 ![SCP:SL](https://img.shields.io/badge/SCP%3ASL-14.x-orange)
 ![License](https://img.shields.io/badge/License-GPL--3.0-red)
 
@@ -10,7 +10,7 @@ SCP: Secret Laboratory 服务器的 **HUD信息显示扩展** 插件，基于 La
 ## 功能
 
 - **SCP-914 激活提示**：显示谁激活了 SCP-914 以及操作模式，对914房间内的玩家可见
-- **电梯使用提示**：显示谁使用了电梯，对操作者附近范围内的玩家可见（范围可配置）
+- **电梯使用提示**：支持多条同时显示（最多3条），每条带实时倒计时，各自到期后自动消失
 - **阵营剩余人数显示**：根据玩家当前阵营，显示对立双方的剩余人数
   - 九尾/科学家阵营：显示九尾和科学家剩余人数
   - 混沌/D级阵营：显示混沌和D级剩余人数
@@ -92,6 +92,7 @@ SCP: Secret Laboratory 服务器的 **HUD信息显示扩展** 插件，基于 La
 | `{color}` | 阵营颜色（来自 `teamColors` 字典，HEX格式如 `#FF0000`） |
 | `{count}` | 阵营剩余人数 |
 | `{p_operator}` | 操作者昵称（获取失败时显示 `unknown_operator` 配置的文案） |
+| `{sec}` | 电梯提示的剩余秒数倒计时（仅 `elev_template` 使用） |
 | `{Time}` | 重生倒计时秒数 |
 | `{mode}` | SCP-914 操作模式（来自 `scp914_trans` 字典） |
 
@@ -113,6 +114,7 @@ SCP: Secret Laboratory 服务器的 **HUD信息显示扩展** 插件，基于 La
 
 | 版本 | LabAPI | SCP:SL | 说明 |
 |------|--------|--------|------|
+| v2.1.0 | 1.1.7 | 14.x | 电梯提示支持多条目实时倒计时（最多3条，模板新增 `{sec}` 占位符） |
 | v2.0.0 | 1.1.7 | 14.x | 修复协程/内存泄漏、字典越界、空检查顺序等bug；清理死代码；添加显示时长/轮询间隔/兜底文案等可配置项 |
 
 ## 许可证

@@ -36,8 +36,8 @@ public class HUDTranslation
     [Description("阵营剩余人数显示模板({color}为当前阵营对应的颜色, {name}是当前对应阵营的显示内容, {count}为当前阵营剩余人数):")]
     public string f_template { get; set; } = "<color={color}>{name}</color>: {count}";
 
-    [Description("电梯显示模板(HEX color写死, {p_operator}表示操作人, 没有的话自动为未知):")]
-    public string elev_template { get; set; } = "[Elevator] 电梯使用者: <color=#B952FA>{p_operator}</color>";
+    [Description("电梯显示模板({sec}表示剩余秒数倒计时, {p_operator}表示操作人, 没有的话自动为unknown_operator配置的内容):")]
+    public string elev_template { get; set; } = "[{sec}] 电梯使用者: <color=#B952FA>{p_operator}</color>";
 
     [Description("NTF普通波重生时间显示模板(HEX color写死, {Time}表示重生时间):")]
     public string ntf_respawn_template { get; set; } = "<color=#00BFFF>下一次刷新时间:</color> {Time}";

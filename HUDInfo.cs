@@ -88,7 +88,7 @@ public class HUDInfo : Plugin<HUDInfoConfig>
 
     public override string Author { get; } = "Crystal";// 插件作者
 
-    public override Version Version { get; } = new Version(2, 0, 0); // 插件版本
+    public override Version Version { get; } = new Version(2, 1, 0); // 插件版本
 
     public override Version RequiredApiVersion { get; } = new(LabApiProperties.CompiledVersion); // 插件依赖的 API 版本
 
@@ -285,6 +285,11 @@ public class PlayerHud : IDisposable
     private Hint _hCiMini;
     private Hint _hElevator;
 
+    // 电梯：多条目列表（最多同时显示3条），每条有独立的到期时间。
+    private const int ElevMaxEntries = 3;
+    private readonly List<(string template, float expiresAt)> _elevEntries = new();
+    private CoroutineHandle _elevatorCoroutine;
+
     // 上一次轮询读到的各刷新波剩余秒数，用于判断计时器是否处于暂停状态（数值没变即视为暂停）。
     private int _lastNtf = int.MaxValue;
     private int _lastNtfMini = int.MaxValue;
@@ -391,11 +396,41 @@ public class PlayerHud : IDisposable
         _h914.HideAfter(BaseA.i_914.duration);
     }
 
-    public void ShowElevator(string text)
+    public void ShowElevator(string template)
     {
-        _hElevator.Text = text;
-        _hElevator.Hide = false;
-        _hElevator.HideAfter(BaseA.i_elevator.duration);
+        // 超过上限时移除最旧条目
+        if (_elevEntries.Count >= ElevMaxEntries)
+            _elevEntries.RemoveAt(0);
+
+        _elevEntries.Add((template, Timing.LocalTime + BaseA.i_elevator.duration));
+
+        // 协程未运行时启动
+        if (!_elevatorCoroutine.IsRunning)
+            _elevatorCoroutine = Timing.RunCoroutine(UpdateElevator());
+    }
+
+    private IEnumerator<float> UpdateElevator()
+    {
+        while (true)
+        {
+            float now = Timing.LocalTime;
+            _elevEntries.RemoveAll(e => now >= e.expiresAt);
+
+            if (_elevEntries.Count == 0)
+            {
+                _hElevator.Hide = true;
+                yield break; // 没有条目时自动停止协程
+            }
+
+            _hElevator.Text = string.Join("\n", _elevEntries.Select(e =>
+            {
+                int rem = Math.Max(1, (int)Math.Ceiling(e.expiresAt - Timing.LocalTime));
+                return e.template.Replace("{sec}", rem.ToString());
+            }));
+            _hElevator.Hide = false;
+
+            yield return Timing.WaitForSeconds(1f);
+        }
     }
 
     public void OnRoleChanged(RoleTypeId newRole, bool is_toshow)
@@ -549,8 +584,8 @@ public class PlayerHud : IDisposable
 
     public void Dispose()
     {
-        // 杀掉两个轮询协程，否则玩家断线后它们会以 while(true) 无限运行下去。
-        Timing.KillCoroutines(_factionCoroutine, _respawnCoroutine);
+        // 杀掉所有轮询协程，否则玩家断线后它们会以 while(true) 无限运行下去。
+        Timing.KillCoroutines(_factionCoroutine, _respawnCoroutine, _elevatorCoroutine);
 
         // 把 Hint 从 PlayerDisplay 上摘除，而不只是隐藏，避免残留的引用一直占用内存。
         if (_display != null)
