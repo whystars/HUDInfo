@@ -100,7 +100,7 @@ SCP: Secret Laboratory 服务器的 **HUD信息显示扩展** 插件，基于 La
 1. 安装 Visual Studio 2022
 2. 克隆仓库：
    ```bash
-   git clone <仓库地址>
+   git clone https://github.com/whystars/HUDInfo.git
    ```
 3. 用 Visual Studio 打开 `HUDInfo.sln`，NuGet 自动还原 `Northwood.LabAPI` 和 `HintServiceMeow` 等包
 4. 将服务器目录下的以下文件复制到项目 `using/` 目录：
