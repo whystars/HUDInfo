@@ -1,31 +1,28 @@
-﻿using LabApi.Loader.Features.Plugins;
 using PlayerRoles;
 using Scp914;
-using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using static HUDInfo.HUDInfo;
 
 namespace HUDInfo;
 
+/// <summary>
+/// HUDInfo 翻译配置
+/// </summary>
 public class HUDTranslation
 {
-    [Description("各个阵营剩余人数显示, 内容:")]
-    public Dictionary<Team, string> teamNames { get; set; } = new Dictionary<Team, string>()
+    [Description("各阵营名称显示")]
+    public Dictionary<Team, string> TeamNames { get; set; } = new()
     {
-        { Team.SCPs, "SCP剩余" },
-        { Team.ChaosInsurgency, "混沌剩余" },
-        { Team.FoundationForces, "九尾剩余" },
-        { Team.ClassD, "DD剩余" },
-        { Team.Scientists, "科学家剩余" }
+        { Team.SCPs, "SCP" },
+        { Team.ChaosInsurgency, "混沌" },
+        { Team.FoundationForces, "九尾" },
+        { Team.ClassD, "D级" },
+        { Team.Scientists, "科学家" }
     };
 
-    [Description("各个阵营剩余人数显示, 颜色:")]
-    public Dictionary<Team, string> teamColors { get; set; } = new Dictionary<Team, string>()
-    { 
+    [Description("各阵营颜色（HEX格式）")]
+    public Dictionary<Team, string> TeamColors { get; set; } = new()
+    {
         { Team.SCPs, "#FF0000" },
         { Team.ChaosInsurgency, "#008F1C" },
         { Team.FoundationForces, "#00BFFF" },
@@ -33,37 +30,37 @@ public class HUDTranslation
         { Team.Scientists, "#FEFE7A" }
     };
 
-    [Description("阵营剩余人数显示模板({color}为当前阵营对应的颜色, {name}是当前对应阵营的显示内容, {count}为当前阵营剩余人数):")]
-    public string f_template { get; set; } = "<color={color}>{name}</color>: {count}";
+    [Description("阵营剩余人数显示模板（{color}=阵营颜色, {name}=阵营名称, {count}=剩余人数）")]
+    public string FactionTemplate { get; set; } = "<color={color}>● {name}</color> <size=28>{count}</size>";
 
-    [Description("电梯显示模板({sec}表示剩余秒数倒计时, {p_operator}表示操作人, 没有的话自动为unknown_operator配置的内容):")]
-    public string elev_template { get; set; } = "[{sec}] 电梯使用者: <color=#B952FA>{p_operator}</color>";
+    [Description("电梯召唤显示模板（{sec}=剩余秒数倒计时, {p_operator}=操作者昵称）")]
+    public string ElevatorTemplate { get; set; } = "▸ 电梯已召唤 <size=20>[{sec}秒]</size> ▸\n<size=18><color=#B952FA>{p_operator}</color></size>";
 
-    [Description("NTF普通波重生时间显示模板(HEX color写死, {Time}表示重生时间):")]
-    public string ntf_respawn_template { get; set; } = "<color=#00BFFF>下一次刷新时间:</color> {Time}";
+    [Description("九尾大波重生倒计时模板（{Time}=重生时间）")]
+    public string NtfRespawnTemplate { get; set; } = "<color=#00BFFF>▸ 九尾刷新</color>\n<size=24>{Time}</size>";
 
-    [Description("NTF小波重生时间显示模板(HEX color写死, {Time}表示重生时间):")]
-    public string ntf_mini_respawn_template { get; set; } = "<color=#00BFFF>迷你波:</color> {Time}";
+    [Description("九尾小波重生倒计时模板（{Time}=重生时间）")]
+    public string NtfMiniRespawnTemplate { get; set; } = "<color=#00BFFF>▸ 小波</color>\n<size=22>{Time}</size>";
 
-    [Description("ChaosInsurgency普通波重生时间显示模板(HEX color写死, {Time}表示重生时间):")]
-    public string ci_respawn_template { get; set; } = "<color=#008F1C>下一次刷新时间:</color> {Time}";
+    [Description("混沌大波重生倒计时模板（{Time}=重生时间）")]
+    public string CiRespawnTemplate { get; set; } = "<color=#008F1C>▸ 混沌刷新</color>\n<size=24>{Time}</size>";
 
-    [Description("ChaosInsurgency小波重生时间显示模板(HEX color写死, {Time}表示重生时间):")]
-    public string ci_mini_respawn_template { get; set; } = "<color=#008F1C>迷你波:</color> {Time}";
+    [Description("混沌小波重生倒计时模板（{Time}=重生时间）")]
+    public string CiMiniRespawnTemplate { get; set; } = "<color=#008F1C>▸ 小波</color>\n<size=22>{Time}</size>";
 
-    [Description("SCP914显示模板(HEX color写死, {mode}表示操作模式, {p_operator}表示操作人, 没有的话自动为未知):")]
-    public string scp914_template { get; set; } = "[Scp914] 已启动! 模式: <color=#F7C73E>{mode}</color>, 操作人: <color=#0080FF>{p_operator}</color>";
+    [Description("SCP-914 激活显示模板（{mode}=操作模式, {p_operator}=操作者昵称）")]
+    public string Scp914Template { get; set; } = "◆ SCP-914 已启动 ◆\n<size=20>档位: <color=#F7C73E>{mode}</color> | 操作者: <color=#0080FF>{p_operator}</color></size>";
 
-    [Description("无法获取操作者名称时显示的兜底文案:")]
-    public string unknown_operator { get; set; } = "未知";
+    [Description("无法获取操作者名称时的兜底文案")]
+    public string UnknownOperator { get; set; } = "未知";
 
-    [Description("SCP914, Rough模式翻译:")]
-    public Dictionary<Scp914KnobSetting, string> scp914_trans { get; set; } = new Dictionary<Scp914KnobSetting, string>()
+    [Description("SCP-914 各档位翻译")]
+    public Dictionary<Scp914KnobSetting, string> Scp914Modes { get; set; } = new()
     {
-        { Scp914KnobSetting.Rough, "粗加" },
-        { Scp914KnobSetting.Coarse, "半粗" },
+        { Scp914KnobSetting.Rough, "粗加工" },
+        { Scp914KnobSetting.Coarse, "半粗加工" },
         { Scp914KnobSetting.OneToOne, "1:1" },
-        { Scp914KnobSetting.Fine, "精加" },
+        { Scp914KnobSetting.Fine, "精加工" },
         { Scp914KnobSetting.VeryFine, "超精加工" }
     };
 }
