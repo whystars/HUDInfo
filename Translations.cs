@@ -31,25 +31,25 @@ public class HUDTranslation
     };
 
     [Description("阵营剩余人数显示模板（{color}=阵营颜色, {name}=阵营名称, {count}=剩余人数）")]
-    public string FactionTemplate { get; set; } = "<color={color}>● {name}</color> <size=28>{count}</size>";
+    public string FactionTemplate { get; set; } = "<color={color}>[{name}]</color> {count}";
 
     [Description("电梯召唤显示模板（{sec}=剩余秒数倒计时, {p_operator}=操作者昵称）")]
-    public string ElevatorTemplate { get; set; } = "▸ 电梯已召唤 <size=20>[{sec}秒]</size> ▸\n<size=18><color=#B952FA>{p_operator}</color></size>";
+    public string ElevatorTemplate { get; set; } = "［电梯］<color=#B952FA>{p_operator}</color> · {sec}秒";
 
     [Description("九尾大波重生倒计时模板（{Time}=重生时间）")]
-    public string NtfRespawnTemplate { get; set; } = "<color=#00BFFF>▸ 九尾刷新</color>\n<size=24>{Time}</size>";
+    public string NtfRespawnTemplate { get; set; } = "<color=#00BFFF>[九尾刷新]</color> {Time}";
 
     [Description("九尾小波重生倒计时模板（{Time}=重生时间）")]
-    public string NtfMiniRespawnTemplate { get; set; } = "<color=#00BFFF>▸ 小波</color>\n<size=22>{Time}</size>";
+    public string NtfMiniRespawnTemplate { get; set; } = "<color=#00BFFF>[九尾小波]</color> {Time}";
 
     [Description("混沌大波重生倒计时模板（{Time}=重生时间）")]
-    public string CiRespawnTemplate { get; set; } = "<color=#008F1C>▸ 混沌刷新</color>\n<size=24>{Time}</size>";
+    public string CiRespawnTemplate { get; set; } = "<color=#008F1C>[混沌刷新]</color> {Time}";
 
     [Description("混沌小波重生倒计时模板（{Time}=重生时间）")]
-    public string CiMiniRespawnTemplate { get; set; } = "<color=#008F1C>▸ 小波</color>\n<size=22>{Time}</size>";
+    public string CiMiniRespawnTemplate { get; set; } = "<color=#008F1C>[混沌小波]</color> {Time}";
 
     [Description("SCP-914 激活显示模板（{mode}=操作模式, {p_operator}=操作者昵称）")]
-    public string Scp914Template { get; set; } = "◆ SCP-914 已启动 ◆\n<size=20>档位: <color=#F7C73E>{mode}</color> | 操作者: <color=#0080FF>{p_operator}</color></size>";
+    public string Scp914Template { get; set; } = "［SCP-914］档位: <color=#F7C73E>{mode}</color> | 操作者: <color=#0080FF>{p_operator}</color>";
 
     [Description("无法获取操作者名称时的兜底文案")]
     public string UnknownOperator { get; set; } = "未知";

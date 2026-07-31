@@ -98,7 +98,7 @@ public class RespawnTimerConfig
     {
         X = -420,
         Y = 135,
-        FontSize = 24
+        FontSize = 26
     };
 
     [Description("混沌大波刷新显示配置")]
@@ -114,6 +114,6 @@ public class RespawnTimerConfig
     {
         X = 420,
         Y = 135,
-        FontSize = 24
+        FontSize = 26
     };
 }
